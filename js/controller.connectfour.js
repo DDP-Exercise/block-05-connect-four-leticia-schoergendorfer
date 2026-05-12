@@ -40,8 +40,56 @@
  *     Bratlsoft - 2026-04-29
  *******************************************************/
 
-
-//TODO: Create your controller-object. When initiated, it should boot
+//DONE: Create your controller-object. When initiated, it should boot
 //      the view (or views, if you decide to make a console-view).
 
-//TODO: Add EventListeners, to forward the user inputs to the model.
+import { polishedView } from "./view.polished.js";
+import { model } from "./model.connectfour.js";
+
+const controller = {
+
+    init() {
+        polishedView.init();
+
+        model.initBoard();
+        polishedView.renderBoard(model.board);
+        polishedView.showCurrentPlayer(model.currentPlayer);
+
+        document.addEventListener("connectfour:playerchange", (e) => {
+            polishedView.showCurrentPlayer(e.detail.player);
+        });
+
+        document.addEventListener("connectfour:stoneinserted", (e) => {
+            polishedView.renderBoard(e.detail.board);
+        });
+
+        document.addEventListener("connectfour:gameover", (e) => {
+            polishedView.showGameOver(e.detail.winner);
+
+            if (e.detail.winningStones) {
+                polishedView.highlightWinningStones(e.detail.winningStones);
+            }
+        });
+    }
+};
+
+
+//DONE: Add EventListeners, to forward the user inputs to the model.
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    controller.init();
+
+    document.getElementById("board").addEventListener("click", (e) => {
+
+        const cell = e.target;
+
+        if (!cell.classList.contains("cell")) return;
+
+        const index = Array.from(cell.parentNode.children).indexOf(cell);
+
+        const column = index % 7;
+
+        model.insertStone(column);
+    });
+});
