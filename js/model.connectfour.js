@@ -1,6 +1,6 @@
 "use strict";
 
-//TODO: Think of this model as the game-logic.
+//DONE: Think of this model as the game-logic.
 //      The model knows everything that is neccessary to manage
 //      the game. It knows the players, know who's turn it is,
 //      knows all the stones and where they are, knows if the
@@ -10,7 +10,21 @@
 //      First step: Create your model-object with all the properties
 //      necessary to store that information.
 
-//TODO: Prepare some customEvents. The model should dispatch events when
+export const model = {
+
+    currentPlayer: "X",
+    gameOver: false,
+    winner: null,
+    winningStones: [],
+
+    rows: 6,
+    cols: 7,
+
+    board: []
+};
+
+
+//DONE: Prepare some customEvents. The model should dispatch events when
 //      - The Player Changes
 //      - A stone was inserted
 //      - The Game is over (Draw or Winner)
@@ -19,21 +33,169 @@
 //      that, when called, dispatches the event. Nothing else should
 //      happen in those methods.
 
+model.dispatchPlayerChange = function () {
 
-//TODO: Initiate the battlefield. Your model needs a representation of the
+    document.dispatchEvent(
+        new CustomEvent("connectfour:playerchange", {
+            detail: {
+                player: model.currentPlayer
+            }
+        })
+    );
+};
+
+model.dispatchStoneInserted = function () {
+
+    document.dispatchEvent(
+        new CustomEvent("connectfour:stoneinserted", {
+            detail: {
+                board: model.board
+            }
+        })
+    );
+};
+
+model.dispatchGameOver = function () {
+
+    document.dispatchEvent(
+        new CustomEvent("connectfour:gameover", {
+            detail: {
+                winner: model.winner,
+                winningStones: model.winningStones
+            }
+        })
+    );
+};
+
+
+//DONE: Initiate the battlefield. Your model needs a representation of the
 //      battlefield as data (two-dimensional array). Obviously, there are
 //      no stones yet in the field.
 
-//TODO: The model should offer a method to insert a stone at a given column.
+model.initBoard = function () {
+
+    model.board = [];
+
+    for (let r = 0; r < model.rows; r++) {
+
+        let row = [];
+
+        for (let c = 0; c < model.cols; c++) {
+            row.push(null);
+        }
+
+        model.board.push(row);
+    }
+};
+
+
+//DONE: The model should offer a method to insert a stone at a given column.
 //      If the stone can be inserted, the model should insert the stone,
 //      dispatch an event to let the world know that the battlefield has changed
 //      and check if the game is over now.
-//      Hint: This method will be called later by your controller, when the
-//      user makes an according input.
 
-//TODO: Methods to check if the game is over, either by draw or a win.
-//      Let the world know in both cases what happend. If it's a win,
-//      Don't forget to store the winning stones and add this >detail<
-//      to your custom event.
+model.insertStone = function (col) {
 
-//TODO: Method to change the current player (and dispatch the according event).
+    if (model.gameOver) return;
+
+    for (let row = model.rows - 1; row >= 0; row--) {
+
+        if (model.board[row][col] === null) {
+
+            model.board[row][col] = model.currentPlayer;
+
+            model.dispatchStoneInserted();
+
+            if (model.checkWin(row, col)) {
+                model.gameOver = true;
+                model.winner = model.currentPlayer;
+                model.dispatchGameOver();
+            }
+            else if (model.checkDraw()) {
+                model.gameOver = true;
+                model.winner = "draw";
+                model.dispatchGameOver();
+            }
+            else {
+                model.changePlayer();
+            }
+
+            return;
+        }
+    }
+};
+
+
+//DONE: Methods to check if the game is over, either by draw or a win.
+
+model.checkDraw = function () {
+
+    for (let r = 0; r < model.rows; r++) {
+        for (let c = 0; c < model.cols; c++) {
+            if (model.board[r][c] === null) {
+                return false;
+            }
+        }
+    }
+    return true;
+};
+
+
+model.checkWin = function (row, col) {
+
+    const player = model.currentPlayer;
+
+    const directions = [
+        [0, 1],
+        [1, 0],
+        [1, 1],
+        [1, -1]
+    ];
+
+    for (let [dr, dc] of directions) {
+
+        let count = 1;
+
+        count += model.countDirection(row, col, dr, dc, player);
+
+        count += model.countDirection(row, col, -dr, -dc, player);
+
+        if (count >= 4) {
+            model.winningStones = [];
+            return true;
+        }
+    }
+
+    return false;
+};
+
+model.countDirection = function (row, col, dr, dc, player) {
+
+    let r = row + dr;
+    let c = col + dc;
+    let count = 0;
+
+    while (
+        r >= 0 &&
+        r < model.rows &&
+        c >= 0 &&
+        c < model.cols &&
+        model.board[r][c] === player
+        ) {
+        count++;
+        r += dr;
+        c += dc;
+    }
+
+    return count;
+};
+
+
+//DONE: Method to change the current player (and dispatch the according event).
+
+model.changePlayer = function () {
+
+    model.currentPlayer = (model.currentPlayer === "X") ? "O" : "X";
+
+    model.dispatchPlayerChange();
+};
