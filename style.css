@@ -42,6 +42,13 @@ body {
     color: black;
 }
 
+#board {
+    position: relative;
+}
+
+
 .winner {
-    border: 3px solid green;
+    border: 4px solid black;
+    z-index: 0;
+    position: absolute;
 }
