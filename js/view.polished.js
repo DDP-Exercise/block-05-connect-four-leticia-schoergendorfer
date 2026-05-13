@@ -68,5 +68,5 @@ export const polishedView = {
         for (let i = 0; i < positions.length; i++) {
             cells[positions[i]].classList.add("winner");
         }
-    }
+    },
 };
