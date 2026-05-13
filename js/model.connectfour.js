@@ -146,27 +146,52 @@ model.checkWin = function (row, col) {
     const player = model.currentPlayer;
 
     const directions = [
-        [0, 1],
-        [1, 0],
-        [1, 1],
-        [1, -1]
+        [0, 1],   // horizontal
+        [1, 0],   // vertikal
+        [1, 1],   // diagonal links oben nach rechts unten
+        [1, -1]   // diagonal rechts oben nach links unten
     ];
 
     for (let [dr, dc] of directions) {
 
-        let count = 1;
+        const stonesBefore = model.collectWinningDirection(row, col, -dr, -dc, player).reverse();
+        const stonesAfter = model.collectWinningDirection(row, col, dr, dc, player);
 
-        count += model.countDirection(row, col, dr, dc, player);
+        const stones = [
+            ...stonesBefore,
+            { row: row, col: col },
+            ...stonesAfter
+        ];
 
-        count += model.countDirection(row, col, -dr, -dc, player);
-
-        if (count >= 4) {
-            model.winningStones = [];
+        if (stones.length >= 4) {
+            model.winningStones = stones.map((stone) => stone.row * model.cols + stone.col);
             return true;
         }
     }
 
+    model.winningStones = [];
     return false;
+};
+
+model.collectWinningDirection = function (row, col, dr, dc, player) {
+
+    let r = row + dr;
+    let c = col + dc;
+    let stones = [];
+
+    while (
+        r >= 0 &&
+        r < model.rows &&
+        c >= 0 &&
+        c < model.cols &&
+        model.board[r][c] === player
+        ) {
+        stones.push({ row: r, col: c });
+        r += dr;
+        c += dc;
+    }
+
+    return stones;
 };
 
 model.countDirection = function (row, col, dr, dc, player) {
